@@ -190,6 +190,22 @@ public class GitAPI implements IGitAPI {
         launchCommand(args);
     }
 
+    public void reset(boolean hard) throws GitException {
+        listener.getLogger().println("Resetting workspace (git reset --hard)");
+
+        ArgumentListBuilder args = new ArgumentListBuilder();
+        args.add("reset");
+        if (hard) {
+            args.add("--hard");
+        }
+
+        launchCommand(args);
+    }
+
+    public void reset() throws GitException {
+        reset(false);
+    }
+
     public void fetch() throws GitException {
         fetch(null, null);
     }
@@ -237,7 +253,19 @@ public class GitAPI implements IGitAPI {
 
     public void clean() throws GitException {
         verifyGitRepository();
-        jGitDelegate.clean().call();
+
+        reset(true); // reset to a clean HEAD first
+
+        listener.getLogger().println("Cleaning workspace (git clean -dfx)");
+
+        ArgumentListBuilder args = new ArgumentListBuilder();
+        args.add("clean");
+        args.add("-dfx");
+
+        launchCommand(args); // fire off the git clean -dfx command
+
+        //jGitDelegate.clean().call(); // this jgit call is fucking bullshit and doesn't work in all cases.
+                                       // better off just calling the command manually.
     }
 
     public ObjectId revParse(String revName) throws GitException {
